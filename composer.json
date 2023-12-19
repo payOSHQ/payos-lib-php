@@ -1,0 +1,25 @@
+{
+  "name": "payos/payos",
+  "version": "0.0.2",
+  "type": "library",
+  "description": "A payOS package for PHP",
+  "license": "MIT",
+  "keywords": [
+    "payos",
+    "payos package",
+    "payment"
+  ],
+  "autoload": {
+    "psr-4": {
+      "PayOS\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "locbt"
+    }
+  ],
+  "require": {
+    "php": ">=8.1"
+  }
+}
