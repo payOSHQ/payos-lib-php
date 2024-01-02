@@ -240,6 +240,35 @@ try {
 
 Verify data received via webhook after payment.
 
+Parameter data type:
+
+```php
+$webhook = [
+    "code" => "string",
+    "desc" => "string",
+    "data" => "array",
+    "signature" => "string",
+];
+
+$data = [
+    "orderCode" => "integer",
+    "amount" => "integer",
+    "description" => "string",
+    "amountNumber" => "string",
+    "reference" => "string",
+    "transactionDateTime" => "string",
+    "paymentLinkId" => "string",
+    "code" => "string",
+    "desc" => "string",
+    "counterAccountBankId" => "string",
+    "counterAccountBankName" => "string",
+    "counterAccountName" => "string",
+    "counterAccountNumber" => "string",
+    "virtualAccountName" => "string",
+    "virtualAccountNumber" => "string",
+];
+```
+
 Return data type:
 
 ```php
@@ -265,10 +294,10 @@ $response = [
 Example:
 
 ```php
-$webhookData = $request->body();
+$webhook = $request->body();
 
 try {
-    $response = $payOS->verifyWebhookData($webhookData);
+    $response = $payOS->verifyWebhookData($webhook);
     return $response;
 } catch (\Throwable $th) {
     return $th->getMessage();
