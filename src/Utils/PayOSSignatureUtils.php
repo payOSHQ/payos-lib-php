@@ -23,7 +23,7 @@ class PayOSSignatureUtils
                     ksort($ele);
                     return $ele;
                 }, $value);
-                $value = json_encode($valueSortedElementObj);
+                $value = json_encode($valueSortedElementObj, JSON_UNESCAPED_UNICODE);
             }
             $queryStrArr[] = $key . "=" . $value;
         }
