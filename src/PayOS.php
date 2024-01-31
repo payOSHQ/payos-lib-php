@@ -195,12 +195,13 @@ class PayOS
             #Ensure to close curl
             curl_close($confirmWebhookRequest);
             $confirmWebhookRes = json_decode($confirmWebhookRes, true);
+            $reponseCode = curl_getinfo($confirmWebhookRequest, CURLINFO_HTTP_CODE);
 
-            if ($confirmWebhookRes->status() == '400') {
+            if ($reponseCode == '400') {
                 throw new Exception(ErrorMessage::WEBHOOK_URL_INVALID, ErrorCode::WEBHOOK_URL_INVALID);
-            } else if ($confirmWebhookRes->status() == '401') {
+            } else if ($reponseCode == '401') {
                 throw new Exception(ErrorMessage::UNAUTHORIZED, ErrorCode::UNAUTHORIZED);
-            } else if (str_starts_with($confirmWebhookRes->status(), '5')) {
+            } else if (str_starts_with($reponseCode, '5')) {
                 throw new Exception(ErrorMessage::INTERNAL_SERVER_ERROR, ErrorCode::INTERNAL_SERVER_ERROR);
             }
             return $webhookUrl;
