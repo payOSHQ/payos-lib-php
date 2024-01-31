@@ -17,3 +17,9 @@
 ### Fixed
 
 - Signature from json array
+
+## [1.0.3] - 2024-01-31
+
+### Fixed
+
+- Reponse code of confirm webhook
