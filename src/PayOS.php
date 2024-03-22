@@ -65,7 +65,7 @@ class PayOS
             throw new Exception($msgError, ErrorCode::INVALID_PARAMETER);
         }
         $url = PAYOS_BASE_URL . '/v2/payment-requests';
-        $signaturePaymentRequest = PayOsSignatureUtils::createSignatureOfPaymentRequest(
+        $signaturePaymentRequest = PayOSSignatureUtils::createSignatureOfPaymentRequest(
             $this->checksumKey,
             $paymentData
         );
@@ -92,7 +92,7 @@ class PayOS
             $paymentLinkRes = json_decode($paymentLinkRes, true);
 
             if ($paymentLinkRes['code'] == '00') {
-                $paymentLinkResSignature = PayOsSignatureUtils::createSignatureFromObj(
+                $paymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $paymentLinkRes['data']
                 );
@@ -116,7 +116,7 @@ class PayOS
      * @return array
      * @throws Exception
      */
-    public function getPaymentLinkInfomation(string|int $orderCode): array
+    public function getPaymentLinkInformation(string|int $orderCode): array
     {
         if (!$orderCode || (is_string($orderCode) && strlen($orderCode) == 0) || (is_int($orderCode) && $orderCode < 0)) {
             throw new Exception(ErrorMessage::INVALID_PARAMETER, ErrorCode::INVALID_PARAMETER);
@@ -141,7 +141,7 @@ class PayOS
             $paymentLinkRes = json_decode($paymentLinkRes, true);
 
             if ($paymentLinkRes['code'] == '00') {
-                $paymentLinkResSignature = PayOsSignatureUtils::createSignatureFromObj(
+                $paymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $paymentLinkRes['data']
                 );
@@ -248,7 +248,7 @@ class PayOS
             $cancelPaymentLinkRes = json_decode($cancelPaymentLinkRes, true);
 
             if ($cancelPaymentLinkRes['code'] == '00') {
-                $cancelPaymentLinkResSignature = PayOsSignatureUtils::createSignatureFromObj(
+                $cancelPaymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $cancelPaymentLinkRes['data']
                 );
@@ -286,7 +286,7 @@ class PayOS
         if (!$data) {
             throw new Exception(ErrorMessage::NO_DATA, ErrorCode::NO_DATA);
         }
-        $signatureData = PayOsSignatureUtils::createSignatureFromObj($this->checksumKey, $data);
+        $signatureData = PayOSSignatureUtils::createSignatureFromObj($this->checksumKey, $data);
         if ($signatureData !== $signature) {
             throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
         }

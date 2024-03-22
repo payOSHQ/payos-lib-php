@@ -3,7 +3,7 @@
 namespace PayOS\Utils;
 
 /**
- * PayOsSignatureUtils
+ * PayOSSignatureUtils
  * 
  * @package PayOS\Utils
  */

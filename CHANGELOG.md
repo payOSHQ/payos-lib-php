@@ -23,3 +23,9 @@
 ### Fixed
 
 - Reponse code of confirm webhook
+
+## [1.0.4] - 2024-03-22
+
+### Fixed
+
+- Modify method name

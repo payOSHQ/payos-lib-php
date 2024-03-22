@@ -98,7 +98,7 @@ try {
 }
 ```
 
-### Get payment link infomation
+### Get payment link information
 
 Get payment information of an order that has created a payment link.
 
