@@ -22,10 +22,16 @@
 
 ### Fixed
 
-- Reponse code of confirm webhook
+- Response code of confirm webhook
 
 ## [1.0.4] - 2024-03-22
 
 ### Fixed
 
 - Modify method name
+
+## [1.0.5] - 2024-06-27
+
+### Added
+
+- Add partner code in PayOS configuration
