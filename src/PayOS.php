@@ -5,7 +5,7 @@ namespace PayOS;
 use Exception;
 use PayOS\Exceptions\ErrorCode;
 use PayOS\Exceptions\ErrorMessage;
-use PayOS\Utils\PayOSSignatureUtils;
+require 'Utils/PayOSSignatureUtils.php';
 
 const PAYOS_BASE_URL = 'https://api-merchant.payos.vn';
 /**
