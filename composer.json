@@ -1,6 +1,6 @@
 {
   "name": "payos/payos",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "library",
   "description": "A payOS package for PHP",
   "license": "MIT",
