@@ -14,7 +14,7 @@ composer require payos/payos
 
 ### Usage
 
-You need to initialize the PayOS object with the Client ID, Api Key and Checksum Key of the payment channel you created.
+You need to initialize the PayOS object with the Client ID, Api Key and Checksum Key of the payment channel you created, your Partner Code is optional.
 
 ```php
 <?php
@@ -24,6 +24,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 use PayOS\PayOS;
 
 $payOS = new PayOS(CLIENT_ID, API_KEY, CHECKSUM_KEY);
+// or
+$payOS = new PayOS(CLIENT_ID, API_KEY, CHECKSUM_KEY, PARTNER_CODE);
 ```
 
 ### Create payment link
@@ -305,4 +307,9 @@ try {
 } catch (\Throwable $th) {
     return $th->getMessage();
 }
+```
+
+### Run test
+```
+vendor/bin/phpunit tests
 ```

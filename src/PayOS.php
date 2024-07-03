@@ -7,6 +7,7 @@ use PayOS\Exceptions\ErrorCode;
 use PayOS\Exceptions\ErrorMessage;
 use PayOS\Utils\PayOSSignatureUtils;
 
+
 const PAYOS_BASE_URL = 'https://api-merchant.payos.vn';
 /**
  * PayOS
@@ -18,6 +19,7 @@ class PayOS
     private string $clientId;
     private string $apiKey;
     private string $checksumKey;
+    private ?string $partnerCode;
 
     /**
      * Create a payOS object to use payment channel methods. Credentials are fields provided after creating a payOS payment channel.
@@ -25,12 +27,14 @@ class PayOS
      * @param string $clientId Client ID of the payOS payment channel
      * @param string $apiKey Api Key of the payOS payment channel
      * @param string $checksumKey Checksum Key of the payOS payment channel
+     * @param null|string $partnerCode Your Partner Code
      */
-    public function __construct(string $clientId, string $apiKey, string $checksumKey)
+    public function __construct(string $clientId, string $apiKey, string $checksumKey, ?string $partnerCode = null)
     {
         $this->clientId = $clientId;
         $this->apiKey = $apiKey;
         $this->checksumKey = $checksumKey;
+        $this->partnerCode = $partnerCode;
     }
 
     /**
@@ -76,6 +80,7 @@ class PayOS
                 'x-api-key: ' . $this->apiKey,
                 'Content-Type: application/json'
             );
+            if ($this->partnerCode != null) array_push($headers, 'x-partner-code: ' . $this->partnerCode);
             $data = array_merge($paymentData, ['signature' => $signaturePaymentRequest]);
 
             $paymentRequest = curl_init();

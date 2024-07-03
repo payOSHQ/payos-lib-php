@@ -14,7 +14,8 @@ class PayOSSignatureUtils
         ksort($obj);
         $queryStrArr = [];
         foreach ($obj as $key => $value) {
-            if (in_array($value, ["undefined", "null"]) || gettype($value) == "NULL") {
+            // if (in_array($value, ["undefined", "null"]) || gettype($value) == "NULL") {
+            if ($value === "undefined" || $value === "null" || gettype($value) == "NULL") {
                 $value = "";
             }
 
