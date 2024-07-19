@@ -249,6 +249,7 @@ Parameter data type:
 $webhook = [
     "code" => "string",
     "desc" => "string",
+    "success" => "boolean",
     "data" => "array",
     "signature" => "string",
 ];
@@ -310,6 +311,7 @@ try {
 ```
 
 ### Run test
+
 ```
 vendor/bin/phpunit tests
 ```

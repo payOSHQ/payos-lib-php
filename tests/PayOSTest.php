@@ -78,6 +78,7 @@ class PayosTest extends TestCase
         $webhookBody = [
             'code' => '00',
             'desc' => 'success',
+            'success' => true,
             'data' => $webhookData,
             'signature' => '8b50051f80b534f8a54b457a6e0ed6847e07b138035ec22cea65a8a167fbbe14'
         ];
