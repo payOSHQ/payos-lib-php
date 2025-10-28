@@ -1,0 +1,14 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    ignoreErrors:
+        # Allow mixed types in some cases
+        - '#Parameter .* has no typehint specified#'
+        # Allow array access
+        - '#Offset .* does not exist on array#'

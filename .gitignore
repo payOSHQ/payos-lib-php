@@ -1,2 +1,7 @@
 /vendor
 composer.lock
+
+# Linting and analysis cache files
+.php-cs-fixer.cache
+.phpstan-cache/
+.phpunit.result.cache

@@ -1,7 +1,7 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use PayOS\PayOS;
+use PHPUnit\Framework\TestCase;
 
 class PayosTest extends TestCase
 {
@@ -27,13 +27,13 @@ class PayosTest extends TestCase
             'orderCode' => $this->orderCode,
             'amount' => 2000,
             'description' => 'Thanh toán đơn hàng',
-            'items' => array(
-                0 => array(
+            'items' => [
+                0 => [
                     "price" => 2000,
                     "name" => "Mỳ tôm",
-                    'quantity' => 1
-                ),
-            ),
+                    'quantity' => 1,
+                ],
+            ],
             'cancelUrl' => $this->webhookUrl,
             'returnUrl' => $this->webhookUrl,
         ];
@@ -80,7 +80,7 @@ class PayosTest extends TestCase
             'desc' => 'success',
             'success' => true,
             'data' => $webhookData,
-            'signature' => '8b50051f80b534f8a54b457a6e0ed6847e07b138035ec22cea65a8a167fbbe14'
+            'signature' => '8b50051f80b534f8a54b457a6e0ed6847e07b138035ec22cea65a8a167fbbe14',
         ];
 
         $verifiedWebhookData = $this->payOS->verifyPaymentWebhookData($webhookBody);

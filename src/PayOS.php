@@ -7,11 +7,10 @@ use PayOS\Exceptions\ErrorCode;
 use PayOS\Exceptions\ErrorMessage;
 use PayOS\Utils\PayOSSignatureUtils;
 
-
 const PAYOS_BASE_URL = 'https://api-merchant.payos.vn';
 /**
  * PayOS
- * 
+ *
  * @package PayOS
  */
 class PayOS
@@ -23,7 +22,7 @@ class PayOS
 
     /**
      * Create a payOS object to use payment channel methods. Credentials are fields provided after creating a payOS payment channel.
-     * 
+     *
      * @param string $clientId Client ID of the payOS payment channel
      * @param string $apiKey Api Key of the payOS payment channel
      * @param string $checksumKey Checksum Key of the payOS payment channel
@@ -58,7 +57,7 @@ class PayOS
                 'amount' => $amount,
                 'returnUrl' => $returnUrl,
                 'cancelUrl' => $cancelUrl,
-                'description' => $description
+                'description' => $description,
             ];
             $requiredKeys = array_keys($requiredPaymentData);
             $keysError = array_filter($requiredKeys, function ($key) use ($requiredPaymentData) {
@@ -66,6 +65,7 @@ class PayOS
             });
 
             $msgError = ErrorMessage::INVALID_PARAMETER . ' ' . implode(', ', $keysError) . ' must not be null.';
+
             throw new Exception($msgError, ErrorCode::INVALID_PARAMETER);
         }
         $url = PAYOS_BASE_URL . '/v2/payment-requests';
@@ -75,12 +75,14 @@ class PayOS
         );
 
         try {
-            $headers = array(
+            $headers = [
                 'x-client-id: ' . $this->clientId,
                 'x-api-key: ' . $this->apiKey,
-                'Content-Type: application/json'
-            );
-            if ($this->partnerCode != null) array_push($headers, 'x-partner-code: ' . $this->partnerCode);
+                'Content-Type: application/json',
+            ];
+            if ($this->partnerCode != null) {
+                array_push($headers, 'x-partner-code: ' . $this->partnerCode);
+            }
             $data = array_merge($paymentData, ['signature' => $signaturePaymentRequest]);
 
             $paymentRequest = curl_init();
@@ -108,6 +110,7 @@ class PayOS
                     return $paymentLinkRes['data'];
                 }
             }
+
             throw new Exception($paymentLinkRes['desc'], $paymentLinkRes['code']);
         } catch (Exception $error) {
             throw new Exception($error->getMessage(), $error->getCode());
@@ -116,7 +119,7 @@ class PayOS
 
     /**
      * Get payment information of an order that has created a payment link.
-     * 
+     *
      * @param string|int $orderCode Order code
      * @return array
      * @throws Exception
@@ -127,12 +130,13 @@ class PayOS
             throw new Exception(ErrorMessage::INVALID_PARAMETER, ErrorCode::INVALID_PARAMETER);
         }
         $url = PAYOS_BASE_URL . '/v2/payment-requests/' . $orderCode;
+
         try {
-            $headers = array(
+            $headers = [
                 'x-client-id: ' . $this->clientId,
                 'x-api-key: ' . $this->apiKey,
-                'Content-Type: application/json'
-            );
+                'Content-Type: application/json',
+            ];
 
             $paymentRequest = curl_init();
             curl_setopt($paymentRequest, CURLOPT_URL, $url);
@@ -157,6 +161,7 @@ class PayOS
                     return $paymentLinkRes['data'];
                 }
             }
+
             throw new Exception($paymentLinkRes['desc'], $paymentLinkRes['code']);
         } catch (Exception $error) {
             throw new Exception($error->getMessage(), $error->getCode());
@@ -165,7 +170,7 @@ class PayOS
 
     /**
      * Validate the Webhook URL of a payment channel and add or update the Webhook URL for that Payment Channel if successful.
-     * 
+     *
      * @param string $webhookUrl Webhook URL
      * @return string
      * @throws Exception
@@ -178,14 +183,14 @@ class PayOS
         $url = PAYOS_BASE_URL . '/confirm-webhook';
 
         try {
-            $headers = array(
+            $headers = [
                 'x-client-id: ' . $this->clientId,
                 'x-api-key: ' . $this->apiKey,
-                'Content-Type: application/json'
-            );
+                'Content-Type: application/json',
+            ];
 
             $data = [
-                'webhookUrl' => $webhookUrl
+                'webhookUrl' => $webhookUrl,
             ];
 
             $confirmWebhookRequest = curl_init();
@@ -204,11 +209,12 @@ class PayOS
 
             if ($reponseCode == '400') {
                 throw new Exception(ErrorMessage::WEBHOOK_URL_INVALID, ErrorCode::WEBHOOK_URL_INVALID);
-            } else if ($reponseCode == '401') {
+            } elseif ($reponseCode == '401') {
                 throw new Exception(ErrorMessage::UNAUTHORIZED, ErrorCode::UNAUTHORIZED);
-            } else if (str_starts_with($reponseCode, '5')) {
+            } elseif (str_starts_with($reponseCode, '5')) {
                 throw new Exception(ErrorMessage::INTERNAL_SERVER_ERROR, ErrorCode::INTERNAL_SERVER_ERROR);
             }
+
             return $webhookUrl;
         } catch (Exception $error) {
             throw new Exception($error->getMessage(), $error->getCode());
@@ -217,7 +223,7 @@ class PayOS
 
     /**
      * Cancel the payment link of the order.
-     * 
+     *
      * @param string|int $orderCode Order code
      * @param ?string cancellationReason Reason for cancelling payment link (optional)
      * @return array
@@ -229,14 +235,15 @@ class PayOS
             throw new Exception(ErrorMessage::INVALID_PARAMETER, ErrorCode::INVALID_PARAMETER);
         }
         $url = PAYOS_BASE_URL . '/v2/payment-requests/' . $orderCode . '/cancel';
+
         try {
-            $headers = array(
+            $headers = [
                 'x-client-id: ' . $this->clientId,
                 'x-api-key: ' . $this->apiKey,
-                'Content-Type: application/json'
-            );
+                'Content-Type: application/json',
+            ];
             $data = [
-                'cancellationReason' => $cancellationReason
+                'cancellationReason' => $cancellationReason,
             ];
 
             $cancelPaymentLinkRequest = curl_init();
@@ -264,6 +271,7 @@ class PayOS
                     return $cancelPaymentLinkRes['data'];
                 }
             }
+
             throw new Exception($cancelPaymentLinkRes['desc'], $cancelPaymentLinkRes['code']);
         } catch (Exception $error) {
             throw new Exception($error->getMessage(), $error->getCode());
@@ -272,7 +280,7 @@ class PayOS
 
     /**
      * Verify data received via webhook after payment.
-     * 
+     *
      * @param array $webhookBody Request body received from webhook
      * @return array
      * @throws Exception
@@ -295,6 +303,7 @@ class PayOS
         if ($signatureData !== $signature) {
             throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
         }
+
         return $data;
     }
 }

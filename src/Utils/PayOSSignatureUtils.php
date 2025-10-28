@@ -4,7 +4,7 @@ namespace PayOS\Utils;
 
 /**
  * PayOSSignatureUtils
- * 
+ *
  * @package PayOS\Utils
  */
 class PayOSSignatureUtils
@@ -22,6 +22,7 @@ class PayOSSignatureUtils
             if (is_array($value)) {
                 $valueSortedElementObj = array_map(function ($ele) {
                     ksort($ele);
+
                     return $ele;
                 }, $value);
                 $value = json_encode($valueSortedElementObj, JSON_UNESCAPED_UNICODE);
@@ -30,6 +31,7 @@ class PayOSSignatureUtils
         }
         $queryStr = implode("&", $queryStrArr);
         $signature = hash_hmac('sha256', $queryStr, $checksumKey);
+
         return $signature;
     }
 
@@ -37,6 +39,7 @@ class PayOSSignatureUtils
     {
         $dataStr = "amount={$obj["amount"]}&cancelUrl={$obj["cancelUrl"]}&description={$obj["description"]}&orderCode={$obj["orderCode"]}&returnUrl={$obj["returnUrl"]}";
         $signature = hash_hmac("sha256", $dataStr, $checksumKey);
+
         return $signature;
     }
 }

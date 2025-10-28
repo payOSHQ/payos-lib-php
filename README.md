@@ -312,6 +312,54 @@ try {
 
 ### Run test
 
-```
+```bash
 vendor/bin/phpunit tests
 ```
+
+## Development
+
+This project uses several tools to maintain code quality and consistency:
+
+### Code Linting
+
+The project includes code quality tools:
+
+- **PHPStan**: Performs static analysis and type checking
+
+#### Running Lints
+
+```bash
+# Run static analysis
+composer lint
+
+# Using scripts (alternative)
+./scripts/lint
+```
+
+### Code Formatting
+
+The project uses PHP-CS-Fixer for automated code formatting:
+
+```bash
+# Format code automatically
+composer format
+
+# Check what would be formatted (dry run)
+composer format:check
+
+# Using scripts (alternative)
+./scripts/format
+```
+
+### Complete Quality Check
+
+Run all quality checks including linting, formatting, and tests:
+
+```bash
+composer check
+```
+
+### Configuration Files
+
+- `.php-cs-fixer.php`: PHP-CS-Fixer configuration
+- `phpstan.neon`: PHPStan configuration
