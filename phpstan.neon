@@ -3,12 +3,19 @@ parameters:
     paths:
         - src
         - tests
+        - examples
     excludePaths:
         - vendor
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
     ignoreErrors:
-        # Allow mixed types in some cases
-        - '#Parameter .* has no typehint specified#'
-        # Allow array access
-        - '#Offset .* does not exist on array#'
+        - identifier: missingType.iterableValue
+        # Ignore errors in deprecated v1 methods (will be removed in v3)
+        -
+            message: '#.*#'
+            path: src/PayOS.php
+            reportUnmatched: false
+        # Ignore errors in examples (they demonstrate both array and object usage)
+        -
+            message: '#Cannot access property .* on array\|.*#'
+            paths:
+                - examples
+            reportUnmatched: false

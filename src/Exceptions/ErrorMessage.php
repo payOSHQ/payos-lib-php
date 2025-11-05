@@ -2,6 +2,10 @@
 
 namespace PayOS\Exceptions;
 
+/**
+ * @deprecated This class is deprecated and will be removed in a future version. Use exception messages from APIException instead.
+ * @see \PayOS\Exceptions\APIException::$errorDesc
+ */
 class ErrorMessage
 {
     public const NO_SIGNATURE = "No signature.";

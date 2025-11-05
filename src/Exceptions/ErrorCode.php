@@ -2,6 +2,10 @@
 
 namespace PayOS\Exceptions;
 
+/**
+ * @deprecated This class is deprecated and will be removed in a future version. Use exception codes from APIException instead.
+ * @see \PayOS\Exceptions\APIException::$errorCode
+ */
 class ErrorCode
 {
     public const INTERNAL_SERVER_ERROR = "20";
