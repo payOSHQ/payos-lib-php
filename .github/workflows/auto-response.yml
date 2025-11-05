@@ -28,7 +28,7 @@ jobs:
 
             If this issue **is** related to the payOS PHP SDK, please provide more details about:
             - The specific error or behavior you're experiencing
-            - Your environment (Node.js version, OS, SDK version)
+            - Your environment (PHP version, OS, SDK version)
             - Code snippets that reproduce the issue
 
             Thank you for your understanding! 🙏`
