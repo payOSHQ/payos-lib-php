@@ -1,0 +1,52 @@
+name: test
+
+on:
+  push:
+    branches:
+      - develop
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+jobs:
+  build-test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: ["ubuntu-latest"]
+        php: [8.2, 8.3, 8.4]
+        phpunit: [11]
+        dependency-version: [prefer-lower, prefer-stable]
+
+    name: Tests ${{matrix.php}} - PHPUnit ${{matrix.phpunit}} - ${{matrix.os}} - ${{matrix.dependency-version}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{matrix.php}}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
+          coverage: none
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-php-${{matrix.php}}-composer-${{hashFiles('composer.json')}}
+
+      - name: Install dependencies
+        run: |
+          composer update --${{matrix.dependency-version}} --prefer-dist --no-interaction --no-progress
+
+      - name: Run PHPStan
+        run: composer run lint
+
+      - name: Check code formatting
+        run: composer run format:check
+
+      - name: Run tests
+        run: composer run test
