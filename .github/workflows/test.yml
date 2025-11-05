@@ -17,7 +17,7 @@ jobs:
         os: ["ubuntu-latest"]
         php: [8.2, 8.3, 8.4]
         phpunit: [11]
-        dependency-version: [prefer-lower, prefer-stable]
+        dependency-version: [prefer-lowest, prefer-stable]
 
     name: Tests ${{matrix.php}} - PHPUnit ${{matrix.phpunit}} - ${{matrix.os}} - ${{matrix.dependency-version}}
 
