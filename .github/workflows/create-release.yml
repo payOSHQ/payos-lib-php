@@ -1,14 +1,18 @@
 name: Create Github Release
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+  workflow_run:
+    workflows: ["test"]
+    types:
+      - completed
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch != 'develop' &&
+      startsWith(github.event.workflow_run.head_branch, 'v')
 
     permissions:
       contents: write
@@ -16,11 +20,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Extract version information
         id: version_info
         run: |
-          VERSION="${{ github.ref_name }}"
+          VERSION="${{ github.event.workflow_run.head_branch }}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           # Check if current version is pre-release (e.g. alpha / beta / rc)
@@ -38,7 +44,7 @@ jobs:
         id: changelog
         run: |
           # https://medium.com/%40usman_qb/from-git-tag-to-github-release-automating-changelog-extraction-9cfcad1b13c4
-          VERSION="${{ github.ref_name }}"
+          VERSION="${{ github.event.workflow_run.head_branch }}"
           # Remove 'v' prefix if it exists for matching changelog
           VERSION_NUMBER="${VERSION#v}"
 
@@ -69,13 +75,13 @@ jobs:
         id: create_release
         run: |
           if [ "${{ steps.version_info.outputs.is_prerelease }}" = "true" ]; then
-            echo "Create release for version ${{ github.ref_name }} (Pre-release)"
+            echo "Create release for version ${{ github.event.workflow_run.head_branch }} (Pre-release)"
             gh release create "${{ steps.version_info.outputs.version }}" \
               --title "${{ steps.version_info.outputs.release_name }}" \
               --notes-file release_notes.md \
               --prerelease
           else
-            echo "Create release for version ${{ github.ref_name }}"
+            echo "Create release for version ${{ github.event.workflow_run.head_branch }}"
             gh release create "${{ steps.version_info.outputs.version }}" \
               --title "${{ steps.version_info.outputs.release_name }}" \
               --notes-file release_notes.md
