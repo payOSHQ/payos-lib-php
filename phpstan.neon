@@ -1,0 +1,21 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+        - examples
+    excludePaths:
+        - vendor
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        # Ignore errors in deprecated v1 methods (will be removed in v3)
+        -
+            message: '#.*#'
+            path: src/PayOS.php
+            reportUnmatched: false
+        # Ignore errors in examples (they demonstrate both array and object usage)
+        -
+            message: '#Cannot access property .* on array\|.*#'
+            paths:
+                - examples
+            reportUnmatched: false

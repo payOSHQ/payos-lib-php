@@ -1,20 +1,35 @@
-# PayOS PHP library
+# payOS PHP Library
 
 [![Packagist Downloads](https://img.shields.io/packagist/dm/payos/payos)](https://packagist.org/packages/payos/payos)
+[![Packagist Version](https://img.shields.io/packagist/v/payos/payos)](https://packagist.org/packages/payos/payos)
 
-PayOS is a PHP library for the PayOS API.
+The payOS PHP library provides convenient access to the payOS Merchant API from applications written in PHP.
 
-## Getting started
+To learn how to use the payOS Merchant API, check out our [API Reference](https://payos.vn/docs/api) and [Documentation](https://payos.vn/docs). We also have useful examples in the [`examples/`](./examples/) directory.
 
-### Installation
+## Requirements
 
-```shell
+PHP 8.2 or higher.
+
+## Installation
+
+Install with Composer:
+
+```bash
 composer require payos/payos
 ```
 
-### Usage
+Ensure that the `php-http/discovery` composer plugin is allowed to run or install a client manually if your project does not already have a PSR-18 HTTP client integrated.
 
-You need to initialize the PayOS object with the Client ID, Api Key and Checksum Key of the payment channel you created, your Partner Code is optional.
+```bash
+composer require guzzlehttp/guzzle
+```
+
+## Usage
+
+### Basic usage
+
+First you need to initialize the client to interact with the payOS Merchant API.
 
 ```php
 <?php
@@ -23,295 +38,79 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use PayOS\PayOS;
 
-$payOS = new PayOS(CLIENT_ID, API_KEY, CHECKSUM_KEY);
-// or
-$payOS = new PayOS(CLIENT_ID, API_KEY, CHECKSUM_KEY, PARTNER_CODE);
+$payOS = new PayOS(
+    clientId: getenv('PAYOS_CLIENT_ID'),
+    apiKey: getenv('PAYOS_API_KEY'),
+    checksumKey: getenv('PAYOS_CHECKSUM_KEY'),
+);
 ```
 
-### Create payment link
-
-Create a payment link for the order data passed in the parameter.
-
-Parameter data type:
+After initialization you can call the client APIs using the resource objects. For example, to create a payment link use the `PaymentRequests` resource and the `CreatePaymentLinkRequest` model:
 
 ```php
-$data = [
-    "orderCode" => "string",
-    "amount" => "integer",
-    "description" => "string",
-    "returnUrl" => "string",
-    "cancelUrl" => "string",
-    "signature" => "string|null",
-    "items" => "array|null",
-    "buyerName" => "string|null",
-    "buyerEmail" => "string|null",
-    "buyerPhone" => "string|null",
-    "buyerAddress" => "string|null",
-    "expiredAt" => "integer|null",
-];
-```
+<?php
+use PayOS\Models\V2\PaymentRequests\CreatePaymentLinkRequest;
 
-Items data type:
-
-```php
-$items = [
-    [
-        "name" => "string",
-        "quantity" => "integer",
-        "price" => "integer",
-    ]
-];
-```
-
-Return data type:
-
-```php
-$response = [
-    "bin" => "string",
-    "accountNumber" => "string",
-    "accountName" => "string",
-    "amount" => "integer",
-    "description" => "string",
-    "orderCode" => "integer",
-    "currency" => "string",
-    "paymentLinkId" => "string",
-    "status" => "string",
-    "checkoutUrl" => "string",
-    "qrCode" => "string",
-];
-```
-
-Example:
-
-```php
-$data = [
-    "orderCode" => intval(substr(strval(microtime(true) * 10000), -6)),
-    "amount" => 2000,
-    "description" => "Create payment link",
-    "returnUrl" => $YOUR_DOMAIN . "/success.html",
-    "cancelUrl" => $YOUR_DOMAIN . "/cancel.html"
-];
+$paymentData = new CreatePaymentLinkRequest(
+    orderCode: time(),
+    amount: 2000,
+    description: 'test payment',
+    returnUrl: $YOUR_DOMAIN . '/success.html',
+    cancelUrl: $YOUR_DOMAIN . '/cancel.html'
+);
 
 try {
-    $response = $payOS->createPaymentLink($data);
-    return redirect($response['checkoutUrl']);
-} catch (\Throwable $th) {
-    return $th->getMessage();
+    $result = $payOS->paymentRequests->create($paymentData);
+    // $result is a CreatePaymentLinkResponse object
+    // Use $result->checkoutUrl to get the redirect URL
+} catch (\PayOS\Exceptions\APIException $e) {
+    echo "API Error: " . $e->getMessage();
 }
 ```
 
-### Get payment link information
-
-Get payment information of an order that has created a payment link.
-
-Parameter data type:
+If you want to use the old array return values, add $options['asArray'] = true to the method call.
 
 ```php
-$orderCode = "integer";
+$result = $payOS->paymentRequests->create($paymentData, options: ['asArray' => true]);
 ```
 
-Return data type:
+### Webhook verification
+
+You can register an endpoint to receive payment webhooks and verify incoming payloads using the `Webhooks` resource:
 
 ```php
-$response = [
-    "id" => "string",
-    "orderCode" => "integer",
-    "amount" => "integer",
-    "amountPaid" => "integer",
-    "amountRemaining" => "integer",
-    "status" => "string",
-    "createAt" => "string",
-    "transactions" => "array",
-    "cancellationReason" => "string|null",
-    "canceledAt" => "string|null",
-];
-```
+// Confirm/register a webhook URL (PayOS will validate the URL)
+$confirmResult = $payOS->webhooks->confirm('https://your-webhook-url/');
 
-Transactions data type:
-
-```php
-$transactions = [
-    [
-        "reference" => "string",
-        "amount" => "integer",
-        "accountNumber" => "string",
-        "description" => "string",
-        "transactionDateTime" => "string",
-        "virtualAccountName" => "string|null",
-        "virtualAccountNumber" => "string|null",
-        "counterAccountBankId" => "string|null",
-        "counterAccountBankName" => "string|null",
-        "counterAccountName" => "string|null",
-        "counterAccountNumber" => "string|null",
-    ]
-];
-```
-
-Example:
-
-```php
-$orderCode = 123456;
-
+// Verify a webhook payload received from PayOS
+$webhookPayload = $request->getParsedBody(); // from PSR-7 request
 try {
-    $response = $payOS->getPaymentLinkInfomation($orderCode);
-    return $response;
-} catch (\Throwable $th) {
-    return $th->getMessage();
+    $verified = $payOS->webhooks->verify($webhookPayload);
+    // $verified is a WebhookData object
+} catch (\PayOS\Exceptions\WebhookException $e) {
+    echo 'Invalid webhook: ' . $e->getMessage();
 }
 ```
 
-### Cancel payment link
+For more information about webhooks, see [the API docs](https://payos.vn/docs/api/#tag/payment-webhook/operation/payment-webhook).
 
-Cancel the payment link of the order.
+### Handling errors
 
-Parameter data type:
-
-```php
-$orderCode = "integer";
-$cancelBody = "string|null";
-```
-
-Return data type:
+When the API returns a non-success HTTP status (4xx/5xx) or a non-success code in the response payload (any code other than '00'), an `APIException` (or a subclass) will be thrown. Catch it to inspect status, headers and the API error payload.
 
 ```php
-$response = [
-    "id" => "string",
-    "orderCode" => "integer",
-    "amount" => "integer",
-    "amountPaid" => "integer",
-    "amountRemaining" => "integer",
-    "status" => "string",
-    "createAt" => "string",
-    "transactions" => "array",
-    "cancellationReason" => "string|null",
-    "canceledAt" => "string|null",
-];
-```
-
-Transactions data type:
-
-```php
-$transactions = [
-    [
-        "reference" => "string",
-        "amount" => "integer",
-        "accountNumber" => "string",
-        "description" => "string",
-        "transactionDateTime" => "string",
-        "virtualAccountName" => "string|null",
-        "virtualAccountNumber" => "string|null",
-        "counterAccountBankId" => "string|null",
-        "counterAccountBankName" => "string|null",
-        "counterAccountName" => "string|null",
-        "counterAccountNumber" => "string|null",
-    ]
-];
-```
-
-Example:
-
-```php
-$orderCode = 123456;
-$reason = "Cancel payment link";
-
 try {
-    $response = $payOS->cancelPaymentLink($orderCode, $cancelBody);
-    return $response;
-} catch (\Throwable $th) {
-    return $th->getMessage();
+    // example of calling a resource
+    $page = $payOS->payouts->list();
+} catch (\PayOS\Exceptions\APIException $e) {
+    echo "API Error: " . $e->getMessage();
 }
 ```
 
-### Confirm webhook
+### Auto pagination
 
-Validate the Webhook URL of a payment channel and add or update the Webhook URL for that Payment Channel if successful.
+List endpoints are paginated. Use provided helpers to iterate through all pages or request pages manually (see [`example`](./examples/pagination_iteration.php)).
 
-Example:
+## Contributing
 
-```php
-$webhookUrl = "https://your-webhook-url/";
-
-try {
-    $payOS->confirmWebhook($webhookUrl);
-    return "Webhook confirmed";
-} catch (\Throwable $th) {
-    return $th->getMessage();
-}
-```
-
-### Verify webhook data
-
-Verify data received via webhook after payment.
-
-Parameter data type:
-
-```php
-$webhook = [
-    "code" => "string",
-    "desc" => "string",
-    "success" => "boolean",
-    "data" => "array",
-    "signature" => "string",
-];
-
-$data = [
-    "orderCode" => "integer",
-    "amount" => "integer",
-    "description" => "string",
-    "accountNumber" => "string",
-    "reference" => "string",
-    "transactionDateTime" => "string",
-    "currency" => "string",
-    "paymentLinkId" => "string",
-    "code" => "string",
-    "desc" => "string",
-    "counterAccountBankId" => "string",
-    "counterAccountBankName" => "string",
-    "counterAccountName" => "string",
-    "counterAccountNumber" => "string",
-    "virtualAccountName" => "string",
-    "virtualAccountNumber" => "string",
-];
-```
-
-Return data type:
-
-```php
-$response = [
-    "orderCode" => "integer",
-    "amount" => "integer",
-    "description" => "string",
-    "accountNumber" => "string",
-    "reference" => "string",
-    "transactionDateTime" => "string",
-    "currency" => "string",
-    "paymentLinkId" => "string",
-    "code" => "string",
-    "desc" => "string",
-    "counterAccountBankId" => "string",
-    "counterAccountBankName" => "string",
-    "counterAccountName" => "string",
-    "counterAccountNumber" => "string",
-    "virtualAccountName" => "string",
-    "virtualAccountNumber" => "string",
-];
-```
-
-Example:
-
-```php
-$webhook = $request->body();
-
-try {
-    $response = $payOS->verifyWebhookData($webhook);
-    return $response;
-} catch (\Throwable $th) {
-    return $th->getMessage();
-}
-```
-
-### Run test
-
-```
-vendor/bin/phpunit tests
-```
+See [the contributing documentation](./CONTRIBUTING.md).
