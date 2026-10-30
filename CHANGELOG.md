@@ -4,8 +4,8 @@
 
 ### Bug fixes
 
-- **webhooks:** stricter validation of raw webhook arrays before signature verification; constant-time comparison
-- **client:** fail closed when a signed response is missing its signature
+- **webhooks:** stricter validation of raw webhook arrays before signature verification; constant-time comparison ([GHSA-h4qh-3qph-xfm6](https://github.com/payOSHQ/payos-lib-php/security/advisories/GHSA-h4qh-3qph-xfm6))
+- **client:** fail closed when a signed response is missing its signature ([GHSA-fp4v-3mhm-pwjx](https://github.com/payOSHQ/payos-lib-php/security/advisories/GHSA-fp4v-3mhm-pwjx))
 
 ## 2.0.0 (2025-11-05)
 
