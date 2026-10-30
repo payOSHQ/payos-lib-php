@@ -12,6 +12,7 @@ use PayOS\Models\V1\Payouts\GetPayoutListParam;
 use PayOS\Models\V1\Payouts\Payout;
 use PayOS\Models\V1\Payouts\PayoutRequest;
 use PayOS\Resources\V1\Payouts\Batch\Batch;
+use PayOS\Utils\PathSegment;
 
 /**
  * Payouts Resource
@@ -94,7 +95,7 @@ class Payouts extends APIResource
             ],
         ]);
 
-        $data = $this->_client->get("/v1/payouts/{$payoutId}", $requestOptions);
+        $data = $this->_client->get('/v1/payouts/' . PathSegment::encode('payoutId', $payoutId), $requestOptions);
 
         if (isset($options['asArray']) && $options['asArray']) {
             return $data;

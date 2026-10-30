@@ -6,6 +6,7 @@ use PayOS\Core\APIResource;
 use PayOS\Core\FileDownloadResponse;
 use PayOS\Core\ObjectSerializer;
 use PayOS\Models\V2\PaymentRequests\Invoices\InvoicesInfo;
+use PayOS\Utils\PathSegment;
 
 /**
  * Invoices Resource
@@ -31,7 +32,7 @@ class Invoices extends APIResource
             ],
         ]);
 
-        $data = $this->_client->get("/v2/payment-requests/{$id}/invoices", $requestOptions);
+        $data = $this->_client->get('/v2/payment-requests/' . PathSegment::encode('id', $id) . '/invoices', $requestOptions);
 
         if (isset($options['asArray']) && $options['asArray']) {
             return $data;
@@ -65,7 +66,8 @@ class Invoices extends APIResource
         ]);
 
         return $this->_client->downloadFile(
-            "/v2/payment-requests/{$id}/invoices/{$invoiceId}/download",
+            '/v2/payment-requests/' . PathSegment::encode('id', $id)
+                . '/invoices/' . PathSegment::encode('invoiceId', $invoiceId) . '/download',
             $downloadOptions
         );
     }
