@@ -63,19 +63,47 @@ class Webhooks extends APIResource
     /**
      * Verify the webhook data sent from PayOS.
      *
-     * @param Webhook|array $webhook The webhook data received from PayOS (can be Webhook object or array)
+     * @param mixed $webhook Untrusted input; must be a Webhook object or array
      * @param array|null $options Additional options (asArray)
      * @return WebhookData|array The verified webhook data
      * @throws WebhookException When webhook data or signature is invalid
      */
     public function verify($webhook, ?array $options = null): WebhookData|array
     {
-        // Convert array to Webhook object if needed
+        // Get crypto provider from client
+        $crypto = $this->_client->getCrypto();
+        $checksumKey = $this->_client->getChecksumKey();
+
         if (is_array($webhook)) {
-            $webhook = ObjectSerializer::fromArray($webhook, Webhook::class);
-            if ($webhook === null) {
-                throw new WebhookException('Invalid webhook data format');
+            // Validate and hash the wire form; deserializing first would cast types and drop keys
+            $data = $webhook['data'] ?? null;
+            if ($data === null) {
+                throw new WebhookException('Invalid webhook data');
             }
+
+            WebhookDataValidator::validate($data);
+
+            $signature = $webhook['signature'] ?? null;
+            if (!is_string($signature) || $signature === '') {
+                throw new WebhookException('Invalid signature');
+            }
+
+            $signed = $crypto->createSignatureFromObj($data, $checksumKey);
+
+            if (empty($signed) || !hash_equals($signed, $signature)) {
+                throw new WebhookException('Data not integrity');
+            }
+
+            if (isset($options['asArray']) && $options['asArray']) {
+                return $data;
+            }
+
+            $result = ObjectSerializer::fromArray($data, WebhookData::class);
+            if ($result === null) {
+                throw new WebhookException('Invalid webhook data');
+            }
+
+            return $result;
         }
 
         if (!($webhook instanceof Webhook)) {
@@ -90,21 +118,23 @@ class Webhooks extends APIResource
             throw new WebhookException('Invalid signature');
         }
 
-        // Get crypto provider from client
-        $crypto = $this->_client->getCrypto();
-        $checksumKey = $this->_client->getChecksumKey();
-
         // Convert WebhookData to array for signature verification
-        $dataArray = ObjectSerializer::toArray($webhook->data);
+        try {
+            $dataArray = ObjectSerializer::toArray($webhook->data);
+        } catch (\Error $e) {
+            throw new WebhookException('Invalid webhook data');
+        }
 
         // Ensure we have an array for signature verification
         if (!is_array($dataArray)) {
             throw new WebhookException('Invalid webhook data format');
         }
 
+        WebhookDataValidator::validateTypedValues($dataArray);
+
         $signedSignature = $crypto->createSignatureFromObj($dataArray, $checksumKey);
 
-        if (empty($signedSignature) || $signedSignature !== $webhook->signature) {
+        if (empty($signedSignature) || !hash_equals($signedSignature, $webhook->signature)) {
             throw new WebhookException('Data not integrity');
         }
 

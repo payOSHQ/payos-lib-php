@@ -82,8 +82,9 @@ You can register an endpoint to receive payment webhooks and verify incoming pay
 // Confirm/register a webhook URL (PayOS will validate the URL)
 $confirmResult = $payOS->webhooks->confirm('https://your-webhook-url/');
 
-// Verify a webhook payload received from PayOS
-$webhookPayload = $request->getParsedBody(); // from PSR-7 request
+// Verify a webhook payload received from payOS.
+// Pass the decoded JSON body as an array for the strictest checks.
+$webhookPayload = json_decode((string) $request->getBody(), true); // from PSR-7 request
 try {
     $verified = $payOS->webhooks->verify($webhookPayload);
     // $verified is a WebhookData object

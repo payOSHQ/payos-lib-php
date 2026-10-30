@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.1 (2026-10-30)
+
+### Bug fixes
+
+- **webhooks:** stricter validation of raw webhook arrays before signature verification; constant-time comparison
+- **client:** fail closed when a signed response is missing its signature
+
 ## 2.0.0 (2025-11-05)
 
 This is a major release that introduces several new features, improvements, and bug fixes. Please refer to the [migration guide](MIGRATION.md) for details on how to upgrade from v1 to v2.

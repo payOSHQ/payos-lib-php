@@ -26,7 +26,7 @@ use Psr\Http\Client\RequestExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 const PAYOS_BASE_URL = 'https://api-merchant.payos.vn';
-const VERSION = "2.0.0";
+const VERSION = "2.0.1";
 
 /**
  * payOS API Client
@@ -467,14 +467,16 @@ class PayOS
             $resSignature = $options->signatureOpts['response'] === 'body' ?
                 $apiResponse->signature : ($parsedHeaders['x-signature'] ?? null);
 
-            if ($resSignature !== null) {
-                $signedSignature = $options->signatureOpts['response'] === 'body' ?
-                    $this->crypto->createSignatureFromObj($apiResponse->data, $this->checksumKey) :
-                    $this->crypto->createSignature($this->checksumKey, $apiResponse->data);
+            if (!is_string($resSignature) || $resSignature === '') {
+                throw new InvalidSignatureException('Missing response signature');
+            }
 
-                if ($resSignature !== $signedSignature) {
-                    throw new InvalidSignatureException('Data integrity check failed');
-                }
+            $signedSignature = $options->signatureOpts['response'] === 'body' ?
+                $this->crypto->createSignatureFromObj($apiResponse->data, $this->checksumKey) :
+                $this->crypto->createSignature($this->checksumKey, $apiResponse->data);
+
+            if (!is_string($signedSignature) || !hash_equals($signedSignature, $resSignature)) {
+                throw new InvalidSignatureException('Data integrity check failed');
             }
         }
 
