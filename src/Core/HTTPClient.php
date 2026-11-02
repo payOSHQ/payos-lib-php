@@ -14,12 +14,12 @@ use PsrDiscovery\Discover;
 /**
  * PSR-18 HTTP Client wrapper with automatic discovery
  *
- * Redirects are followed by this wrapper, not by the underlying client, so the merchant credentials
- * never leave the API origin: `x-api-key`, `x-client-id`, `x-partner-code`, `authorization`, `cookie` and
- * `proxy-authorization` are dropped when a redirect points to another origin (Guzzle and Symfony only
- * drop `Authorization` and `Cookie`). Guzzle's PSR-18 `sendRequest()` never follows redirects and the
- * Symfony `Psr18Client` is reconfigured with `max_redirects: 0`; any other injected client must be
- * configured not to follow redirects itself.
+ * Redirects (301, 302, 303, 307, 308) are followed by this wrapper, not by the underlying client:
+ * `x-api-key`, `x-client-id`, `x-partner-code`, `authorization`, `cookie` and `proxy-authorization` are
+ * dropped once a redirect leaves the origin of the original request. Guzzle's PSR-18 `sendRequest()` never
+ * follows redirects and a Symfony `Psr18Client` is reconfigured with `max_redirects: 0` when it supports
+ * `withOptions()`. A supplied client must not follow redirects itself nor add credential headers, cookies
+ * or authentication on its own; otherwise those requests are outside this wrapper's control.
  */
 class HTTPClient
 {
@@ -43,16 +43,20 @@ class HTTPClient
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null
     ) {
-        $this->client = self::withoutAutomaticRedirects($client ?? $this->discoverClient());
+        $this->client = $client !== null
+            ? self::withoutAutomaticRedirects($client, false)
+            : self::withoutAutomaticRedirects($this->discoverClient(), true);
         $this->requestFactory = $requestFactory ?? $this->discoverRequestFactory();
         $this->streamFactory = $streamFactory ?? $this->discoverStreamFactory();
     }
 
     /**
      * Turns off the redirect following of clients that follow redirects by default, so redirects
-     * reach {@see sendRequest()}.
+     * reach {@see sendRequest()}. A supplied Symfony client without `withOptions()` is kept as is.
+     *
+     * @throws PayOSException When a discovered client cannot be configured not to follow redirects.
      */
-    private static function withoutAutomaticRedirects(ClientInterface $client): ClientInterface
+    private static function withoutAutomaticRedirects(ClientInterface $client, bool $discovered): ClientInterface
     {
         $symfonyClient = self::SYMFONY_PSR18_CLIENT;
         if (!$client instanceof $symfonyClient) {
@@ -63,7 +67,13 @@ class HTTPClient
             /** @var ClientInterface */
             return $client->withOptions(['max_redirects' => 0]); // @phpstan-ignore class.notFound
         }
+        if (!$discovered) {
+            return $client;
+        }
         $symfonyHttpClient = 'Symfony\Component\HttpClient\HttpClient';
+        if (!class_exists($symfonyHttpClient)) {
+            throw new PayOSException('Cannot configure the discovered Symfony HTTP client not to follow redirects');
+        }
 
         /** @var ClientInterface */
         return new $symfonyClient( // @phpstan-ignore class.notFound
@@ -144,10 +154,11 @@ class HTTPClient
     }
 
     /**
-     * Send a PSR-7 request and get response, following up to 5 redirects.
+     * Send a PSR-7 request and get response, following up to 5 redirects (301, 302, 303, 307, 308).
      *
-     * Credentials are dropped when a redirect leaves the origin (scheme, host and port) of the
-     * current request. A 303, or a 301/302 answering a POST, is followed with a body-less GET.
+     * Credentials are dropped once a redirect leaves the origin (scheme, host and port) of the original
+     * request and stay dropped for the rest of the chain. A 303, or a 301/302 answering a POST, is
+     * followed with a body-less GET.
      *
      * @throws PayOSException When there are more than 5 redirects or the location is not an HTTP(S) URL.
      */
@@ -156,14 +167,14 @@ class HTTPClient
         for ($hop = 0; ; $hop++) {
             $response = $this->client->sendRequest($request);
             $status = $response->getStatusCode();
-            $location = $status >= 300 && $status < 400 ? $response->getHeaderLine('Location') : '';
+            $location = in_array($status, [301, 302, 303, 307, 308], true) ? $response->getHeaderLine('Location') : '';
             if ($location === '') {
                 return $response;
             }
+            $response->getBody()->close();
             if ($hop >= self::MAX_REDIRECTS) {
                 throw new PayOSException(sprintf('Too many redirects (more than %d)', self::MAX_REDIRECTS));
             }
-            $response->getBody()->close();
 
             $next = self::resolveLocation($request->getUri(), $location);
             if (self::origin($next) !== self::origin($request->getUri())) {

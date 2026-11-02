@@ -25,7 +25,7 @@ Ensure that the `php-http/discovery` composer plugin is allowed to run or instal
 composer require guzzlehttp/guzzle
 ```
 
-The SDK follows redirects itself and drops the credential headers when a redirect leaves the API origin. Guzzle's PSR-18 client never follows redirects and a Symfony `Psr18Client` is reconfigured automatically; if you inject another PSR-18 client, configure it not to follow redirects.
+The SDK follows redirects (301, 302, 303, 307, 308) itself and drops the credential headers once a redirect leaves the API origin. Guzzle's PSR-18 client never follows redirects and a discovered Symfony `Psr18Client` is configured with `max_redirects: 0`. If you supply your own PSR-18 client, it must not follow redirects itself nor add credential headers, cookies or authentication by default.
 
 ## Usage
 

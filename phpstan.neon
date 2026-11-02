@@ -6,6 +6,8 @@ parameters:
         - examples
     excludePaths:
         - vendor
+        # Stand-in for the optional symfony/http-client; must not shadow it during analysis
+        - tests/fixtures/FakeSymfonyHttpClient.php
     ignoreErrors:
         - identifier: missingType.iterableValue
         # Ignore errors in deprecated v1 methods (will be removed in v3)
