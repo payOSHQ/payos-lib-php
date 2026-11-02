@@ -15,7 +15,7 @@ use PsrDiscovery\Discover;
  * PSR-18 HTTP Client wrapper with automatic discovery
  *
  * Redirects are followed by this wrapper, not by the underlying client, so the merchant credentials
- * never leave the API origin: `x-api-key`, `x-client-id`, `authorization`, `cookie` and
+ * never leave the API origin: `x-api-key`, `x-client-id`, `x-partner-code`, `authorization`, `cookie` and
  * `proxy-authorization` are dropped when a redirect points to another origin (Guzzle and Symfony only
  * drop `Authorization` and `Cookie`). Guzzle's PSR-18 `sendRequest()` never follows redirects and the
  * Symfony `Psr18Client` is reconfigured with `max_redirects: 0`; any other injected client must be
@@ -24,7 +24,14 @@ use PsrDiscovery\Discover;
 class HTTPClient
 {
     private const MAX_REDIRECTS = 5;
-    private const SENSITIVE_REDIRECT_HEADERS = ['x-api-key', 'x-client-id', 'authorization', 'cookie', 'proxy-authorization'];
+    private const SENSITIVE_REDIRECT_HEADERS = [
+        'x-api-key',
+        'x-client-id',
+        'x-partner-code',
+        'authorization',
+        'cookie',
+        'proxy-authorization',
+    ];
     private const SYMFONY_PSR18_CLIENT = 'Symfony\Component\HttpClient\Psr18Client';
 
     private ClientInterface $client;

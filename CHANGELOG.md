@@ -6,7 +6,7 @@
 
 - **webhooks:** stricter validation of raw webhook arrays before signature verification; constant-time comparison ([GHSA-h4qh-3qph-xfm6](https://github.com/payOSHQ/payos-lib-php/security/advisories/GHSA-h4qh-3qph-xfm6))
 - **client:** fail closed when a signed response is missing its signature ([GHSA-fp4v-3mhm-pwjx](https://github.com/payOSHQ/payos-lib-php/security/advisories/GHSA-fp4v-3mhm-pwjx))
-- **client:** percent-encode ids interpolated into API paths and reject `.`/`..`, empty, negative and unsafe integer ids; follow redirects in the SDK and drop `x-api-key`/`x-client-id`/`authorization`/`cookie`/`proxy-authorization` when a redirect leaves the API origin; validate body-signed response data (no `&key=` smuggling, unsupported keys, non-finite numbers or nested objects) before verifying its signature
+- **client:** percent-encode ids interpolated into API paths and reject `.`/`..`, empty, negative and unsafe integer ids; follow redirects in the SDK and drop `x-api-key`/`x-client-id`/`x-partner-code`/`authorization`/`cookie`/`proxy-authorization` when a redirect leaves the API origin; validate body-signed response data (no `&key=` smuggling, unsupported keys, non-finite numbers or nested objects) before verifying its signature
 
 ## 2.0.0 (2025-11-05)
 
