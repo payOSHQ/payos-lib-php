@@ -2,6 +2,8 @@
 
 namespace PayOS\Utils;
 
+use PayOS\Exceptions\PayOSException;
+
 /**
  * Safe path segments for identifiers interpolated into API paths.
  *
@@ -16,22 +18,24 @@ final class PathSegment
 
     /**
      * @param mixed $value
-     * @throws \InvalidArgumentException When the value is empty, a dot segment, or not a supported type/range.
+     * @throws PayOSException When the value is empty, a dot segment, or not a supported type/range.
      */
     public static function encode(string $name, $value): string
     {
         if (is_int($value)) {
             if ($value < 0 || $value > self::MAX_SAFE_INTEGER) {
-                throw new \InvalidArgumentException("{$name} must be a non-negative safe integer");
+                throw new PayOSException("{$name} must be a non-negative safe integer");
             }
+
             return (string) $value;
         }
         if (!is_string($value) || $value === '') {
-            throw new \InvalidArgumentException("{$name} must be a non-empty string or a safe integer");
+            throw new PayOSException("{$name} must be a non-empty string or a safe integer");
         }
         if ($value === '.' || $value === '..') {
-            throw new \InvalidArgumentException("{$name} must not be a dot segment");
+            throw new PayOSException("{$name} must not be a dot segment");
         }
+
         return rawurlencode($value);
     }
 }

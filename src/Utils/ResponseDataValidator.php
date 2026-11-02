@@ -35,6 +35,7 @@ final class ResponseDataValidator
             $key = (string) $key;
             if (!is_array($value)) {
                 self::validateScalar($key, $value);
+
                 continue;
             }
             if ($value !== [] && !array_is_list($value)) {

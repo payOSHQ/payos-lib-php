@@ -1205,6 +1205,7 @@ class PayOS
         if (!$data) {
             throw new Exception(ErrorMessage::NO_DATA, ErrorCode::NO_DATA);
         }
+
         try {
             \PayOS\Utils\WebhookDataValidator::validate($data);
         } catch (\PayOS\Exceptions\WebhookException $e) {
