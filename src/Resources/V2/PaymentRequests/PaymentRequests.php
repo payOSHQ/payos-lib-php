@@ -9,6 +9,7 @@ use PayOS\Models\V2\PaymentRequests\CreatePaymentLinkRequest;
 use PayOS\Models\V2\PaymentRequests\CreatePaymentLinkResponse;
 use PayOS\Models\V2\PaymentRequests\PaymentLink;
 use PayOS\Resources\V2\PaymentRequests\Invoices\Invoices;
+use PayOS\Utils\PathSegment;
 
 /**
  * Payment Requests
@@ -67,7 +68,7 @@ class PaymentRequests extends APIResource
             ],
         ]);
 
-        $data = $this->_client->get("/v2/payment-requests/{$id}", $requestOptions);
+        $data = $this->_client->get('/v2/payment-requests/' . PathSegment::encode('id', $id), $requestOptions);
 
         if (isset($options['asArray']) && $options['asArray']) {
             return $data;
@@ -108,7 +109,7 @@ class PaymentRequests extends APIResource
             ],
         ]);
 
-        $data = $this->_client->post("/v2/payment-requests/{$id}/cancel", $requestOptions);
+        $data = $this->_client->post('/v2/payment-requests/' . PathSegment::encode('id', $id) . '/cancel', $requestOptions);
 
         if (isset($options['asArray']) && $options['asArray']) {
             return $data;

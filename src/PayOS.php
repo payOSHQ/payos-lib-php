@@ -19,14 +19,16 @@ use PayOS\Resources\V1\Payouts\Payouts;
 use PayOS\Resources\V1\PayoutsAccount\PayoutsAccount;
 use PayOS\Resources\V2\PaymentRequests\PaymentRequests;
 use PayOS\Resources\Webhooks\Webhooks;
+use PayOS\Utils\PathSegment;
 use PayOS\Utils\PayOSSignatureUtils;
+use PayOS\Utils\ResponseDataValidator;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\NetworkExceptionInterface;
 use Psr\Http\Client\RequestExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 const PAYOS_BASE_URL = 'https://api-merchant.payos.vn';
-const VERSION = "2.0.0";
+const VERSION = "2.0.1";
 
 /**
  * payOS API Client
@@ -467,14 +469,20 @@ class PayOS
             $resSignature = $options->signatureOpts['response'] === 'body' ?
                 $apiResponse->signature : ($parsedHeaders['x-signature'] ?? null);
 
-            if ($resSignature !== null) {
-                $signedSignature = $options->signatureOpts['response'] === 'body' ?
-                    $this->crypto->createSignatureFromObj($apiResponse->data, $this->checksumKey) :
-                    $this->crypto->createSignature($this->checksumKey, $apiResponse->data);
+            if (!is_string($resSignature) || $resSignature === '') {
+                throw new InvalidSignatureException('Missing response signature');
+            }
 
-                if ($resSignature !== $signedSignature) {
-                    throw new InvalidSignatureException('Data integrity check failed');
-                }
+            if ($options->signatureOpts['response'] === 'body') {
+                ResponseDataValidator::validate($apiResponse->data);
+            }
+
+            $signedSignature = $options->signatureOpts['response'] === 'body' ?
+                $this->crypto->createSignatureFromObj($apiResponse->data, $this->checksumKey) :
+                $this->crypto->createSignature($this->checksumKey, $apiResponse->data);
+
+            if (!is_string($signedSignature) || !hash_equals($signedSignature, $resSignature)) {
+                throw new InvalidSignatureException('Data integrity check failed');
             }
         }
 
@@ -974,11 +982,16 @@ class PayOS
             $paymentLinkRes = json_decode($paymentLinkRes, true);
 
             if ($paymentLinkRes['code'] == '00') {
+                try {
+                    ResponseDataValidator::validate($paymentLinkRes['data']);
+                } catch (InvalidSignatureException $e) {
+                    throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
+                }
                 $paymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $paymentLinkRes['data']
                 );
-                if ($paymentLinkResSignature !== $paymentLinkRes['signature']) {
+                if (!is_string($paymentLinkRes['signature'] ?? null) || !hash_equals($paymentLinkResSignature, $paymentLinkRes['signature'])) {
                     throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
                 }
                 if ($paymentLinkRes['data']) {
@@ -1006,7 +1019,7 @@ class PayOS
         if (!$orderCode || (is_string($orderCode) && strlen($orderCode) == 0) || (is_int($orderCode) && $orderCode < 0)) {
             throw new Exception(ErrorMessage::INVALID_PARAMETER, ErrorCode::INVALID_PARAMETER);
         }
-        $url = PAYOS_BASE_URL . '/v2/payment-requests/' . $orderCode;
+        $url = PAYOS_BASE_URL . '/v2/payment-requests/' . PathSegment::encode('orderCode', $orderCode);
 
         try {
             $headers = [
@@ -1027,11 +1040,16 @@ class PayOS
             $paymentLinkRes = json_decode($paymentLinkRes, true);
 
             if ($paymentLinkRes['code'] == '00') {
+                try {
+                    ResponseDataValidator::validate($paymentLinkRes['data']);
+                } catch (InvalidSignatureException $e) {
+                    throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
+                }
                 $paymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $paymentLinkRes['data']
                 );
-                if ($paymentLinkResSignature !== $paymentLinkRes['signature']) {
+                if (!is_string($paymentLinkRes['signature'] ?? null) || !hash_equals($paymentLinkResSignature, $paymentLinkRes['signature'])) {
                     throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
                 }
                 if ($paymentLinkRes['data']) {
@@ -1115,7 +1133,7 @@ class PayOS
         if (!$orderCode || (is_string($orderCode) && strlen($orderCode) == 0) || (is_int($orderCode) && $orderCode < 0)) {
             throw new Exception(ErrorMessage::INVALID_PARAMETER, ErrorCode::INVALID_PARAMETER);
         }
-        $url = PAYOS_BASE_URL . '/v2/payment-requests/' . $orderCode . '/cancel';
+        $url = PAYOS_BASE_URL . '/v2/payment-requests/' . PathSegment::encode('orderCode', $orderCode) . '/cancel';
 
         try {
             $headers = [
@@ -1141,11 +1159,16 @@ class PayOS
             $cancelPaymentLinkRes = json_decode($cancelPaymentLinkRes, true);
 
             if ($cancelPaymentLinkRes['code'] == '00') {
+                try {
+                    ResponseDataValidator::validate($cancelPaymentLinkRes['data']);
+                } catch (InvalidSignatureException $e) {
+                    throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
+                }
                 $cancelPaymentLinkResSignature = PayOSSignatureUtils::createSignatureFromObj(
                     $this->checksumKey,
                     $cancelPaymentLinkRes['data']
                 );
-                if ($cancelPaymentLinkResSignature !== $cancelPaymentLinkRes['signature']) {
+                if (!is_string($cancelPaymentLinkRes['signature'] ?? null) || !hash_equals($cancelPaymentLinkResSignature, $cancelPaymentLinkRes['signature'])) {
                     throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
                 }
                 if ($cancelPaymentLinkRes['data']) {
@@ -1182,8 +1205,14 @@ class PayOS
         if (!$data) {
             throw new Exception(ErrorMessage::NO_DATA, ErrorCode::NO_DATA);
         }
+
+        try {
+            \PayOS\Utils\WebhookDataValidator::validate($data);
+        } catch (\PayOS\Exceptions\WebhookException $e) {
+            throw new Exception($e->getMessage(), ErrorCode::DATA_NOT_INTEGRITY);
+        }
         $signatureData = PayOSSignatureUtils::createSignatureFromObj($this->checksumKey, $data);
-        if ($signatureData !== $signature) {
+        if (!is_string($signature) || !hash_equals($signatureData, $signature)) {
             throw new Exception(ErrorMessage::DATA_NOT_INTEGRITY, ErrorCode::DATA_NOT_INTEGRITY);
         }
 

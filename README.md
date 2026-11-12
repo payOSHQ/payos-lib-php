@@ -25,6 +25,8 @@ Ensure that the `php-http/discovery` composer plugin is allowed to run or instal
 composer require guzzlehttp/guzzle
 ```
 
+The SDK follows redirects (301, 302, 303, 307, 308) itself and drops the credential headers once a redirect leaves the API origin. Guzzle's PSR-18 client never follows redirects and a discovered Symfony `Psr18Client` is configured with `max_redirects: 0`. If you supply your own PSR-18 client, it must not follow redirects itself nor add credential headers, cookies or authentication by default.
+
 ## Usage
 
 ### Basic usage
@@ -82,8 +84,9 @@ You can register an endpoint to receive payment webhooks and verify incoming pay
 // Confirm/register a webhook URL (PayOS will validate the URL)
 $confirmResult = $payOS->webhooks->confirm('https://your-webhook-url/');
 
-// Verify a webhook payload received from PayOS
-$webhookPayload = $request->getParsedBody(); // from PSR-7 request
+// Verify a webhook payload received from payOS.
+// Pass the decoded JSON body as an array for the strictest checks.
+$webhookPayload = json_decode((string) $request->getBody(), true); // from PSR-7 request
 try {
     $verified = $payOS->webhooks->verify($webhookPayload);
     // $verified is a WebhookData object
